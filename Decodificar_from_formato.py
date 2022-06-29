@@ -1,35 +1,37 @@
-import struct
+# import struct
+from bitstring import BitArray
 
 def decodificar_dato(dato, tipo):
 
     if tipo == "int":
 
-        return int.from_bytes(dato, byteorder="big", signed=False)
+        entero = dato.int
+        return entero
 
     elif tipo == "float":
 
-        floatt = struct.unpack("f", bytes(dato))
-        float_real = floatt[0]
+        float_real = dato.float
         return float_real
 
     elif tipo == "str":
 
-        strin = bytes(dato)
-        strings = strin.decode("utf-8")
-        return strings
+        dato_string = dato.hex
+        datos_bytes = bytes.fromhex(dato_string)
+        ascii_strings = datos_bytes.decode("utf-8")
+        return ascii_strings
     else:
         return None
 
 def decodificar_trama(trama, formato):
     resultado = {}
-    bytes_arr = list(bytes(trama))
+    bytes_arr = BitArray(trama)
     for sub_formato in formato:
-        size = int(sub_formato["len"] / 8)
+        size = int(sub_formato["len"])
         dato = bytes_arr[:size]
+
         del bytes_arr[:size]
 
         val = decodificar_dato(dato, sub_formato["type"])
-
         if val is None:
             return None
 
@@ -39,9 +41,11 @@ def decodificar_trama(trama, formato):
 def codificar_dato(dato, tamaño, tipo):
 
     if tipo == "int":
+
         if type(dato) is int or float:
+
             x = int(dato)
-            result = x.to_bytes(int(tamaño / 8), "big")
+            result = BitArray(int=dato, length=tamaño)
             return result
         elif type(dato) is str:
             return None
@@ -49,7 +53,7 @@ def codificar_dato(dato, tamaño, tipo):
     elif tipo == "float":
         if type(dato) is int or float:
             x = float(dato)
-            result = struct.pack("f", dato)
+            result = BitArray(float=x, length=tamaño)
             return result
         else:
             return None
@@ -57,7 +61,7 @@ def codificar_dato(dato, tamaño, tipo):
     elif tipo == "str":
         if type(dato) is int or float:
             x = str(dato)
-            result = bytes(dato, "utf-8")
+            result = bytes(x, "utf-8")
             return result
         elif type(dato) is str:
             result = bytes(dato, "utf-8")
@@ -78,22 +82,22 @@ def codificar_trama(dicc, formato):
     return buffer
 
 formato1 = [
-    {"tag": "v0", "type": "str", "len": 8},
+    {"tag": "v0", "type": "str", "len": 32},
     {"tag": "v1", "type": "float", "len": 32},
     {"tag": "v2", "type": "int", "len": 8},
 ]
 formato2 = [
-    {"tag": "v0", "type": "int", "len": 8},
-    {"tag": "v1", "type": "int", "len": 16},
+    {"tag": "v0", "type": "int", "len": 4},
+    {"tag": "v1", "type": "int", "len": 6},
 ]
 formato3 = [
-    {"tag": "v0", "type": "int", "len": 8},
-    {"tag": "v1", "type": "int", "len": 40},
-    {"tag": "v2", "type": "float", "len": 32},
-    {"tag": "v3", "type": "str", "len": 64},
+    {"tag": "v0", "type": "int", "len": 9},
+    {"tag": "v1", "type": "int", "len": 19},
+    {"tag": "v2", "type": "float", "len": 64},
+    {"tag": "v3", "type": "str", "len": 16},
 ]
 
-trama_ejemplo = b"\x40\x32\x03\x04\x05\x06"
+# trama_ejemplo = b"\x40\x32\x03\x04\x05\x06"
 
 diccionario_valores_ejemplo = {
     "voltaje": 65,
